@@ -97,15 +97,14 @@ def check_metadata(json_dir_path):
 
 
 def main():
-    npy_dir_path = "/mnt/Shared_data/Data/clip-features-32-aic25-b1/clip-features-32"
-    json_dir_path = "/mnt/Shared_data/Data/media-info-aic25-b1/media-info"
+    npy_dir_path = os.getenv("LINUX_NPY_DIR")
+    json_dir_path = os.getenv("LINUX_JSON_DIR")
 
     if not os.path.exists(npy_dir_path) or not os.path.exists(json_dir_path):
         print("[-] One or both of the specified directories do not exist.")
         return
     
     ''' 
-
     npy_dir = pathlib.Path(npy_dir_path)
     json_dir = pathlib.Path(json_dir_path)
 

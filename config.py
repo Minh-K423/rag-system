@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    MODEL_NAME: str 
     LINUX_NPY_DIR: str
     LINUX_JSON_DIR: str
     BASE_LLM_URL: str

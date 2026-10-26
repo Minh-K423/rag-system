@@ -7,12 +7,15 @@ from setup.eda import generate_point, data_availability
 from pathlib import Path
 import os
 
+from config import Settings
+config = Settings()
+
 
 def main():
     qdrant_client = QdrantClient(host="localhost", port=6333)
 
-    npy_dir_path = "/mnt/Shared_data/Data/clip-features-32-aic25-b1/clip-features-32"
-    json_dir_path = "/mnt/Shared_data/Data/media-info-aic25-b1/media-info"
+    npy_dir_path = config.NPY_DIR
+    json_dir_path = config.JSON_DIR
 
     qdrant_client.recreate_collection(
         collection_name="video_features_collection",

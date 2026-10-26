@@ -1,8 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    LINUX_NPY_DIR: str
-    LINUX_JSON_DIR: str
+    NPY_DIR: str
+    JSON_DIR: str
     BASE_LLM_URL: str
     CLIP_MODEL: str
 

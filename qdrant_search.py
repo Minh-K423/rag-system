@@ -15,18 +15,22 @@ import torch
 import torch.nn.functional as F
 
 from transformers import CLIPProcessor, CLIPModel
+import openai
 from openai import OpenAI
+
+from config import Settings
+
+config = Settings()
+
+client_qdrant = QdrantClient(host="localhost", port=6333)
+model = CLIPModel.from_pretrained(config.CLIP_MODEL) 
+processor = CLIPProcessor.from_pretrained(config.CLIP_MODEL)
 
 
 client_openai = OpenAI(
-    base_url= "http://127.0.0.1:1234/v1",
+    base_url= config.BASE_LLM_URL,
     api_key = "qwen"
 )
-
-
-client_qdrant = QdrantClient(host="localhost", port=6333)
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32") 
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 def build_user_payload(user_input: str) -> str:
     sanitized_input = user_input.replace("</raw_query>", "") #This is to prevent the user from injecting malicious content that could break the XML structure. For example, if the user input contains "</raw_query>", it could prematurely close the XML tag and potentially allow for injection of arbitrary content. By removing this substring, we ensure that the user input cannot interfere with the XML structure.
@@ -90,17 +94,26 @@ def translate_query(query: str):
     messages.extend(build_few_shot_messages())
     messages.append({"role": "user", "content": build_user_payload(query)})
 
-    completion = client_openai.chat.completions.create(
-        model="qwen/qwen3-4b-2507",
-        messages=messages,
-        temperature=0.4,  
-    )
+    try:        
+        completion = client_openai.chat.completions.create(
+            model="qwen/qwen3-4b-2507",
+            messages=messages,
+            temperature=0.4,  
+        )
 
-    try: 
         response_content = json.loads(completion.choices[0].message.content)
         return response_content.get("cleaned_query", query)  # Fallback to original query if key is missing
+
+    except openai.APIConnectionError:
+        print("[-] Connection error occurred while communicating with the LLM server.")
+        return query  # Fallback to original query if connection fails
     except json.JSONDecodeError:
+        print("[-] Failed to parse JSON response from the LLM server.")
         return query  # Fallback to original query if JSON parsing fails
+    except Exception as e:
+        # Đón đầu tất cả các lỗi không lường trước khác (KeyError, IndexError, ...)
+        print(f"[Fallback - Unexpected Error]: {e}")
+        return query
 
 
 def process_query(query: str):
@@ -131,7 +144,7 @@ def main():
 
     while True:
 
-        user_query = input("Enter your search query: (Type 'exit' or 'quit' to stop)")
+        user_query = input("Enter your search query: (Type 'exit' or 'quit' to stop): ")
 
         if user_query.lower() in ["exit", "quit"]:
             print("Exiting the search.")
